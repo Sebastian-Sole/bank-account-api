@@ -5,6 +5,12 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 import moment from "moment";
 import { TransactionSchema } from "./schemas/TransactionSchema";
+import {
+  getBankAccountFromId,
+  updateAccountCash,
+} from "./services/bankAccount";
+import { createTransaction } from "./services/transaction";
+import { validateTransactionData } from "./utils/validators/transaction";
 
 const app = express();
 const port = env.PORT;
@@ -16,85 +22,48 @@ app.post("/", async (req, res) => {
   res.status(200).send("Hello World");
 });
 
+// Transaction endpoint
 app.post("/transaction", async (req, res) => {
-  const registeredTime = moment().valueOf();
+  try {
+    const registeredTime = moment().valueOf();
 
-  // const { destinationAccount, cashAmount, sourceAccount } = req.body;
+    const { destinationAccount, cashAmount, sourceAccount } =
+      validateTransactionData(req.body);
 
-  const parsedData = TransactionSchema.safeParse(req.body);
+    const fromAccount = await getBankAccountFromId(sourceAccount);
 
-  if (!parsedData.success) {
-    return res.status(400).send({
-      message: "Invalid transaction",
-    });
-  }
+    const isValidTransaction = fromAccount.availableCash >= cashAmount;
 
-  const { destinationAccount, cashAmount, sourceAccount } = parsedData.data;
-
-  const fromAccount = await prisma.account.findUniqueOrThrow({
-    where: {
-      id: sourceAccount,
-    },
-  });
-
-  const isValidTransaction = fromAccount.availableCash >= cashAmount;
-
-  const toAccount = await prisma.account.findUniqueOrThrow({
-    where: {
-      id: destinationAccount,
-    },
-  });
-
-  const transaction = await prisma.transaction.create({
-    data: {
+    const transaction = await createTransaction({
       cashAmount,
-      fromAccount: {
-        connect: {
-          id: sourceAccount,
-        },
-      },
-      toAccount: {
-        connect: {
-          id: destinationAccount,
-        },
-      },
+      destinationAccount,
+      isValidTransaction,
       registeredTime,
-      executedTime: isValidTransaction ? moment().valueOf() : null,
-      success: isValidTransaction,
-    },
-  });
+      sourceAccount,
+    });
 
-  if (!isValidTransaction) {
-    return res.status(400).send({
-      message: "Invalid transaction",
+    if (!isValidTransaction) {
+      return res.status(400).send({
+        message: "Invalid transaction",
+      });
+    }
+
+    await updateAccountCash(sourceAccount, -cashAmount);
+    await updateAccountCash(destinationAccount, cashAmount);
+
+    res.status(200).send({
+      data: {
+        ...transaction,
+        executedTime: moment(Number(transaction.executedTime!!)),
+        registeredTime: moment(Number(transaction.registeredTime!!)),
+      },
+    });
+  } catch (e) {
+    console.log(e);
+    res.status(500).send({
+      message: "Internal server error",
     });
   }
-
-  const fromUpdate = await prisma.account.update({
-    where: {
-      id: sourceAccount,
-    },
-    data: {
-      availableCash: fromAccount.availableCash - cashAmount,
-    },
-  });
-
-  const toUpdate = await prisma.account.update({
-    where: {
-      id: destinationAccount,
-    },
-    data: {
-      availableCash: toAccount.availableCash + cashAmount,
-    },
-  });
-
-  res.status(200).send({
-    data: {
-      ...transaction,
-      executedTime: moment(Number(transaction.executedTime!!)),
-      registeredTime: moment(Number(transaction.registeredTime!!)),
-    },
-  });
 });
 
 app.listen(port, () => {
