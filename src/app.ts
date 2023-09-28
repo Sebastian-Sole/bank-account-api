@@ -23,6 +23,11 @@ app.post("/transaction", async (req, res) => {
     },
   });
 
+  if (fromAccount.balance < amount) {
+    res.status(400).send({ message: "Insufficient funds" });
+    return;
+  }
+
   const toAccount = await prisma.bankAccount.findUniqueOrThrow({
     where: {
       id: to,
@@ -55,7 +60,9 @@ app.post("/transaction", async (req, res) => {
     },
   });
 
-  res.status(200).send({ transaction });
+  res.status(200).send({
+    transaction,
+  });
 });
 
 app.listen(port, () => {
