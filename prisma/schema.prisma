@@ -11,12 +11,13 @@ datasource db {
 }
 
 model Account {
-  id            Int           @id @default(autoincrement())
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  name          String
-  availableCash Float
-  transactions  Transaction[]
+  id               Int           @id @default(autoincrement())
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  name             String
+  availableCash    Float
+  toTransactions   Transaction[] @relation("ToAccount")
+  fromTransactions Transaction[] @relation("FromAccount")
 }
 
 model Transaction {
@@ -27,5 +28,6 @@ model Transaction {
   cashAmount         Float
   destinationAccount Int
   sourceAccount      Int
-  fromAccount        Account @relation(fields: [sourceAccount], references: [id])
+  toAccount          Account @relation("ToAccount", fields: [destinationAccount], references: [id])
+  fromAccount        Account @relation("FromAccount", fields: [sourceAccount], references: [id])
 }

@@ -4,6 +4,7 @@ import cors from "cors";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 import moment from "moment";
+import { TransactionSchema } from "./schemas/TransactionSchema";
 
 const app = express();
 const port = env.PORT;
@@ -17,7 +18,18 @@ app.post("/", async (req, res) => {
 
 app.post("/transaction", async (req, res) => {
   const registeredTime = moment().valueOf();
-  const { destinationAccount, cashAmount, sourceAccount } = req.body;
+
+  // const { destinationAccount, cashAmount, sourceAccount } = req.body;
+
+  const parsedData = TransactionSchema.safeParse(req.body);
+
+  if (!parsedData.success) {
+    return res.status(400).send({
+      message: "Invalid transaction",
+    });
+  }
+
+  const { destinationAccount, cashAmount, sourceAccount } = parsedData.data;
 
   const fromAccount = await prisma.account.findUniqueOrThrow({
     where: {
@@ -36,8 +48,16 @@ app.post("/transaction", async (req, res) => {
   const transaction = await prisma.transaction.create({
     data: {
       cashAmount,
-      destinationAccount,
-      sourceAccount,
+      fromAccount: {
+        connect: {
+          id: sourceAccount,
+        },
+      },
+      toAccount: {
+        connect: {
+          id: destinationAccount,
+        },
+      },
       registeredTime,
       executedTime: isValidTransaction ? moment().valueOf() : null,
       success: isValidTransaction,
