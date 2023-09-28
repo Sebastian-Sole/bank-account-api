@@ -3,6 +3,7 @@ import express, { json } from "express";
 import cors from "cors";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
+import moment from "moment";
 
 const app = express();
 const port = env.PORT;
@@ -15,53 +16,64 @@ app.post("/", async (req, res) => {
 });
 
 app.post("/transaction", async (req, res) => {
-  const { to, amount, from } = req.body;
+  const registeredTime = moment().valueOf();
+  const { destinationAccount, cashAmount, sourceAccount } = req.body;
 
-  const fromAccount = await prisma.bankAccount.findUniqueOrThrow({
+  const fromAccount = await prisma.account.findUniqueOrThrow({
     where: {
-      id: from,
+      id: sourceAccount,
     },
   });
 
-  if (fromAccount.balance < amount) {
-    res.status(400).send({ message: "Insufficient funds" });
-    return;
-  }
+  const isValidTransaction = fromAccount.availableCash >= cashAmount;
 
-  const toAccount = await prisma.bankAccount.findUniqueOrThrow({
+  const toAccount = await prisma.account.findUniqueOrThrow({
     where: {
-      id: to,
+      id: destinationAccount,
     },
   });
 
   const transaction = await prisma.transaction.create({
     data: {
-      amount,
-      to,
-      from,
+      cashAmount,
+      destinationAccount,
+      sourceAccount,
+      registeredTime,
+      executedTime: isValidTransaction ? moment().valueOf() : null,
+      success: isValidTransaction,
     },
   });
 
-  const fromUpdate = await prisma.bankAccount.update({
+  if (!isValidTransaction) {
+    return res.status(400).send({
+      message: "Invalid transaction",
+    });
+  }
+
+  const fromUpdate = await prisma.account.update({
     where: {
-      id: from,
+      id: sourceAccount,
     },
     data: {
-      balance: fromAccount.balance - amount,
+      availableCash: fromAccount.availableCash - cashAmount,
     },
   });
 
-  const toUpdate = await prisma.bankAccount.update({
+  const toUpdate = await prisma.account.update({
     where: {
-      id: to,
+      id: destinationAccount,
     },
     data: {
-      balance: toAccount.balance + amount,
+      availableCash: toAccount.availableCash + cashAmount,
     },
   });
 
   res.status(200).send({
-    transaction,
+    data: {
+      ...transaction,
+      executedTime: moment(Number(transaction.executedTime!!)),
+      registeredTime: moment(Number(transaction.registeredTime!!)),
+    },
   });
 });
 

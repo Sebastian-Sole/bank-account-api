@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint --fix",
     "format": "prettier --write './**/*.{js,ts,md,json}' --config ./.prettierrc",
-    "db:seed": "pnpx ts-node prisma/seed.ts"
+    "db:seed": "pnpx tsx prisma/seed.ts"
   },
   "keywords": [],
   "author": "",
@@ -21,7 +21,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.1"
+    "jsonwebtoken": "^9.0.1",
+    "moment": "^2.29.4"
   },
   "devDependencies": {
     "@rollup/plugin-run": "^3.0.1",
@@ -44,6 +45,6 @@
     "npm": ">=8.0.0"
   },
   "prisma": {
-    "seed": "node prisma/seed.js"
+    "seed": "pnpx tsx prisma/seed.ts"
   }
 }

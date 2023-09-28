@@ -10,20 +10,22 @@ datasource db {
   url      = "file:./dev.db"
 }
 
-model BankAccount {
-  id           Int           @id @default(autoincrement())
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  balance      Float
-  transactions Transaction[]
+model Account {
+  id            Int           @id @default(autoincrement())
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  name          String
+  availableCash Float
+  transactions  Transaction[]
 }
 
 model Transaction {
-  id          Int         @id @default(autoincrement())
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  amount      Float
-  to          Int
-  from        Int
-  fromAccount BankAccount @relation(fields: [from], references: [id])
+  id                 Int     @id @default(autoincrement())
+  registeredTime     BigInt
+  executedTime       BigInt?
+  success            Boolean
+  cashAmount         Float
+  destinationAccount Int
+  sourceAccount      Int
+  fromAccount        Account @relation(fields: [sourceAccount], references: [id])
 }
