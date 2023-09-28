@@ -10,12 +10,14 @@
     "start": "pnpm run build && node .",
     "lint": "eslint .",
     "lint:fix": "eslint --fix",
-    "format": "prettier --write './**/*.{js,ts,md,json}' --config ./.prettierrc"
+    "format": "prettier --write './**/*.{js,ts,md,json}' --config ./.prettierrc",
+    "db:seed": "pnpx ts-node prisma/seed.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@prisma/client": "5.3.1",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
@@ -31,12 +33,17 @@
     "@typescript-eslint/eslint-plugin": "^6.2.1",
     "eslint": "^8.46.0",
     "eslint-plugin-prettier": "^5.0.0",
+    "prisma": "^5.3.1",
     "rollup": "^3.27.0",
+    "ts-node": "^10.9.1",
     "tslib": "^2.6.1",
     "typescript": "^5.1.6"
   },
   "engines": {
     "node": ">=16.0.0",
     "npm": ">=8.0.0"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   }
 }
