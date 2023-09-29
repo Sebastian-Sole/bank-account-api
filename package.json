@@ -11,7 +11,9 @@
     "lint": "eslint .",
     "lint:fix": "eslint --fix",
     "format": "prettier --write './**/*.{js,ts,md,json}' --config ./.prettierrc",
-    "db:seed": "pnpx tsx prisma/seed.ts"
+    "db:seed": "pnpx tsx prisma/seed.ts",
+    "test": "jest"
+
   },
   "keywords": [],
   "author": "",
@@ -47,5 +49,9 @@
   },
   "prisma": {
     "seed": "pnpx tsx prisma/seed.ts"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node"
   }
 }

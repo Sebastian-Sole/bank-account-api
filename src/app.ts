@@ -4,7 +4,6 @@ import cors from "cors";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 import moment from "moment";
-import { TransactionSchema } from "./schemas/TransactionSchema";
 import {
   getBankAccountFromId,
   updateAccountCash,
