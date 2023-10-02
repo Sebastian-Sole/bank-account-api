@@ -13,7 +13,7 @@ describe("validateTransactionData", () => {
 
   it("should return null for invalid transaction data", () => {
     const data = {
-      cashAmount: -100,
+      cashAmount: "invalid cash amount",
       sourceAccount: 1,
       destinationAccount: 2,
     };

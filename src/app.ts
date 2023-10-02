@@ -28,7 +28,7 @@ app.post("/transaction", async (req, res) => {
 
     if (!validation) {
       return res.status(400).send({
-        message: "Invalid transaction",
+        message: "Invalid body data",
       });
     }
 
@@ -39,7 +39,9 @@ app.post("/transaction", async (req, res) => {
     const isSameAccount = destinationAccount === sourceAccount;
 
     const isValidTransaction =
-      fromAccount.availableCash >= cashAmount && !isSameAccount;
+      fromAccount.availableCash >= cashAmount &&
+      !isSameAccount &&
+      cashAmount > 0;
 
     const transaction = await createTransaction({
       cashAmount,
