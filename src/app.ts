@@ -1,8 +1,6 @@
 import env from "./env";
 import express, { json } from "express";
 import cors from "cors";
-import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
 import moment from "moment";
 import {
   getBankAccountFromId,
@@ -11,7 +9,7 @@ import {
 import { createTransaction } from "./services/transaction";
 import { validateTransactionData } from "./utils/validators/transaction";
 
-const app = express();
+export const app = express();
 const port = env.PORT;
 
 app.use(cors());
@@ -26,12 +24,22 @@ app.post("/transaction", async (req, res) => {
   try {
     const registeredTime = moment().valueOf();
 
-    const { destinationAccount, cashAmount, sourceAccount } =
-      validateTransactionData(req.body);
+    const validation = validateTransactionData(req.body);
+
+    if (!validation) {
+      return res.status(400).send({
+        message: "Invalid transaction",
+      });
+    }
+
+    const { cashAmount, destinationAccount, sourceAccount } = validation;
 
     const fromAccount = await getBankAccountFromId(sourceAccount);
 
-    const isValidTransaction = fromAccount.availableCash >= cashAmount;
+    const isSameAccount = destinationAccount === sourceAccount;
+
+    const isValidTransaction =
+      fromAccount.availableCash >= cashAmount && !isSameAccount;
 
     const transaction = await createTransaction({
       cashAmount,
