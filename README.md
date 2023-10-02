@@ -1,9 +1,18 @@
-# `express-template`
+# `Bank Account API`
 
-## What is it?
+## How To Run
 
-This repository is some boilerplate for getting started with an Express web server with TypeScript. It uses Rollup as module bundler (i.e. `.ts` -> `.js`). Simply extend the `app.ts` with more endpoints and your custom business logic.
+```
+pnpm i
+prisma generate
+prisma migrate dev
+pnpm run db:seed
 
-## Deploying
+pnpm run dev
+```
 
-It is suggested to use something like [Railway](https://railway.app/) or [fly.io](https://fly.io/) to deploy the application.
+## Run Tests:
+
+```
+pnpm run test
+```
